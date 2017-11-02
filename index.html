@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>RPAS note</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
+  <script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.js"></script>
+  <script src="split.min.js"></script>
+  <script src="colResizable-1.6.min.js"></script>
+  <script src="misc.js"></script>
+  <style>
+  html {
+    height: 100%;
+  }
+
+  body {
+    height: 100%;
+    padding: 1px;
+    background-color: #F6F6F6;
+    box-sizing: border-box;
+  }
+
+  .split {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+
+    overflow-y: auto;
+    overflow-x: auto;
+  }
+
+  .content {
+    border: 1px solid #C0C0C0;
+    box-shadow: inset 0 1px 2px #e4e4e4;
+    background-color: #fff;
+  }
+
+  .gutter {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: 50%;
+  }
+
+  .gutter.gutter-vertical {
+    cursor: row-resize;
+    background-image: url('./grips/horizontal.png');
+  }
+
+  .boxsizingBorder {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 99%;
+    max-height: 99%;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    font-family:"Consolas", "Courier New", "Lucida Console";  
+    font-size: 9px;
+  }
+
+  #popup {
+    position: absolute;
+    color: white;
+    background: #666;
+    padding: 0.5em;
+    display: none;
+    font-size: 11px;
+    font-family:"Consolas", "Courier New", "Lucida Console";
+  }
+
+  #meas_info_area {
+    font-size: 14px
+  }
+
+  #text_area {
+    padding: 3px; 
+    white-space: nowrap;
+    font-size: 15px;
+    font-family:"Consolas", "Courier New", "Lucida Console";
+    line-height: 120%
+  }
+
+  div[contenteditable=true]:empty:before{
+    content: attr(placeholder);
+    color: #808080;
+    display: block;
+  }
+
+  </style>
+</head>
+
+<body>
+      <div id="meas_info_area" class="split content">
+        <table id="meas_info_table" 
+               rules="all" 
+               frame="box" 
+               width="100%" 
+               cellpadding="5" 
+               cellspacing="5">
+          <tbody>
+            <tr>
+              <th style="width: 10%">Name</th>
+              <th style="width: 30%" title="content shows in tooltip">Label</th>
+              <th style="width: 20%">Description</th>
+              <th style="width: 20%" title="content shows in tooltip">Base Intx</th>
+              <th style="width: 20%">Other Notes</th>
+            </tr>
+          </tbody>
+        </table>
+        <div stype="float:bottom">
+          <button id="btn_add_rows" style="position:relative; width:100px; top:2px; margin:0px -50px; left:50%">+1 row</button>
+          <script type="text/javascript">
+            var button_listener = document.getElementById("btn_add_rows")
+            button_listener.addEventListener("click", add_dymc_rows_in_table, false)
+          </script>
+          <br>
+          <br>
+          <br>
+          <br>
+          <br>
+        </div>
+      </div>
+      
+      <div id="text_area" class="split content" contenteditable="true" placeholder="IE is not supported. Enter rule expression or text here; select measure name; hover on the selection"></div>
+      <div id="popup"></div>
+</body>
+
+<script type="text/javascript">
+  var text_area = document.getElementById("text_area")
+  var cr= [];
+  $(text_area).on({
+    'mouseup': function() {
+      cr= window.getSelection().getRangeAt(0).getClientRects();
+    },
+    'mousemove': function(ev) {
+      for(var i = 0 ; i < cr.length ; i++) {
+        $('#popup').text('').hide();
+
+        if(ev.pageX >= cr[i].left && ev.pageX <= cr[i].right &&
+           ev.pageY >= cr[i].top  && ev.pageY <= cr[i].bottom &&
+           window.getSelection().toString().trim() != '') {
+          
+          var meas_obj = search_in_measure_dict(window.getSelection().toString().trim())
+          if(meas_obj == undefined) {
+            search_result = 'N/A'
+          } else {
+            search_result = meas_obj[1] + ' -- ' + meas_obj[3]
+          }
+
+          $('#popup')
+            .text(search_result)
+            .css({
+              top: cr[0].top-$('#popup').outerHeight(),
+              left: cr[0].left
+            })
+            .show();
+          break;
+        }
+      }
+    }
+  });
+</script>
+
+<script type="text/javascript">
+    Split(['#meas_info_area', '#text_area'], {
+      direction: 'vertical',
+      sizes: [25, 75],
+      gutterSize: 5,
+      cursor: 'row-resize'
+    })
+
+    $("#meas_info_table").colResizable({liveDrag:true})
+
+    add_dymc_rows_in_table()
+</script>
+
+</html>
